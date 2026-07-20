@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexStore | Modern E-commerce</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container navbar">
+      <a href="/index.html" class="logo"><i class="fas fa-bolt"></i> ApexStore</a>
+      <nav class="nav-links">
+        <a href="/index.html" class="nav-link active">Home</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="/cart.html" class="cart-nav-btn">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-badge" class="hidden">0</span>
+        </a>
+        <div id="user-nav">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="container hero-content">
+      <span class="hero-tagline">Welcome to ApexStore</span>
+      <h1>Futuristic Gear for <span>Modern Living</span></h1>
+      <p>Explore our curated collection of high-performance products designed to elevate your daily routine. Aesthetics meet utility.</p>
+    </div>
+  </section>
+
+  <!-- Catalog Controls -->
+  <section class="container catalog-controls">
+    <div class="controls-row">
+      <!-- Search Input -->
+      <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="catalog-search" placeholder="Search catalog...">
+      </div>
+
+      <!-- Categories Filter Tabs -->
+      <div class="category-filters" id="category-filters">
+        <button class="filter-btn active" data-category="All">All Items</button>
+        <button class="filter-btn" data-category="Electronics">Electronics</button>
+        <button class="filter-btn" data-category="Office">Office</button>
+        <button class="filter-btn" data-category="Lifestyle">Lifestyle</button>
+        <button class="filter-btn" data-category="Fitness">Fitness</button>
+        <button class="filter-btn" data-category="Kitchen">Kitchen</button>
+        <button class="filter-btn" data-category="Decor">Decor</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Catalog -->
+  <main class="container">
+    <div id="catalog-products" class="products-grid">
+      <!-- Loaded dynamically via catalog JS -->
+      <div class="text-center" style="grid-column: 1 / -1; padding: 40px 0;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 32px; color: var(--primary);"></i>
+        <p style="margin-top: 10px; color: var(--text-secondary);">Loading catalog...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-layout">
+      <p>&copy; 2026 ApexStore Inc. All rights reserved.</p>
+      <p>Crafted for premium user experiences.</p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <!-- Main Catalog Loading Logic -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const productsGrid = document.getElementById('catalog-products');
+      const searchInput = document.getElementById('catalog-search');
+      const categoryFilters = document.getElementById('category-filters');
+      
+      let currentCategory = 'All';
+      let currentSearch = '';
+      
+      // Fetch and display products
+      async function loadProducts() {
+        try {
+          productsGrid.innerHTML = `
+            <div class="text-center" style="grid-column: 1 / -1; padding: 40px 0;">
+              <i class="fas fa-circle-notch fa-spin" style="font-size: 32px; color: var(--primary);"></i>
+              <p style="margin-top: 10px; color: var(--text-secondary);">Loading catalog...</p>
+            </div>
+          `;
+          
+          let url = `/api/products?category=${encodeURIComponent(currentCategory)}&search=${encodeURIComponent(currentSearch)}`;
+          const res = await fetch(url);
+          const data = await res.json();
+          
+          if (!res.ok) throw new Error(data.error || 'Failed to fetch');
+
+          if (data.products.length === 0) {
+            productsGrid.innerHTML = `
+              <div class="empty-state" style="grid-column: 1 / -1;">
+                <div class="empty-state-icon"><i class="fas fa-search"></i></div>
+                <h3>No Products Found</h3>
+                <p>We couldn't find any products matching your filters.</p>
+              </div>
+            `;
+            return;
+          }
+
+          productsGrid.innerHTML = data.products.map(prod => `
+            <article class="product-card">
+              <div class="product-image-container">
+                <a href="/product.html?id=${prod.id}">
+                  <img src="${prod.image_url}" alt="${prod.name}">
+                </a>
+                <span class="product-category-tag">${prod.category}</span>
+              </div>
+              <div class="product-info">
+                <h3 class="product-title">
+                  <a href="/product.html?id=${prod.id}">${prod.name}</a>
+                </h3>
+                <p class="product-desc-snippet">${prod.description}</p>
+                <div class="product-footer">
+                  <span class="product-price">$${prod.price.toFixed(2)}</span>
+                  <button class="add-to-cart-btn" data-id="${prod.id}" data-name="${prod.name}" data-price="${prod.price}" data-image="${prod.image_url}">
+                    <i class="fas fa-plus"></i>
+                  </button>
+                </div>
+              </div>
+            </article>
+          `).join('');
+
+          // Wire up add to cart buttons
+          document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const product = {
+                id: parseInt(btn.dataset.id),
+                name: btn.dataset.name,
+                price: parseFloat(btn.dataset.price),
+                image_url: btn.dataset.image
+              };
+              Cart.add(product, 1);
+            });
+          });
+
+        } catch (err) {
+          console.error('Error loading products:', err);
+          productsGrid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+              <div class="empty-state-icon"><i class="fas fa-exclamation-triangle" style="color: var(--error);"></i></div>
+              <h3>Unable to load catalog</h3>
+              <p>Please try again later. Error: ${err.message}</p>
+            </div>
+          `;
+        }
+      }
+
+      // Handle category filtering
+      categoryFilters.addEventListener('click', (e) => {
+        if (!e.target.classList.contains('filter-btn')) return;
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        e.target.classList.add('active');
+        
+        currentCategory = e.target.dataset.category;
+        loadProducts();
+      });
+
+      // Handle search keyups (debounced slightly)
+      let searchTimeout;
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          currentSearch = e.target.value.trim();
+          loadProducts();
+        }, 300);
+      });
+
+      // Initial load
+      loadProducts();
+    });
+  </script>
+</body>
+</html>

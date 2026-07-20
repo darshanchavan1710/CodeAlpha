@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order History | ApexStore</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container navbar">
+      <a href="/index.html" class="logo"><i class="fas fa-bolt"></i> ApexStore</a>
+      <nav class="nav-links">
+        <a href="/index.html" class="nav-link">Home</a>
+      </nav>
+      <div class="nav-actions">
+        <a href="/cart.html" class="cart-nav-btn">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cart-badge" class="hidden">0</span>
+        </a>
+        <div id="user-nav">
+          <!-- Populated dynamically by app.js -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Orders Display Container -->
+  <main class="container orders-container">
+    <h2 class="panel-title" style="font-size: 28px; margin-bottom: 30px;">Your Orders</h2>
+    <div id="orders-list-view">
+      <div class="text-center" style="padding: 100px 0;">
+        <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; color: var(--primary);"></i>
+        <p style="margin-top: 15px; color: var(--text-secondary);">Retrieving order history...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-layout">
+      <p>&copy; 2026 ApexStore Inc. All rights reserved.</p>
+      <p>Crafted for premium user experiences.</p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const ordersListView = document.getElementById('orders-list-view');
+
+      async function fetchOrders() {
+        try {
+          const res = await fetch('/api/orders');
+          const data = await res.json();
+
+          if (res.status === 401) {
+            // Unauthorized
+            ordersListView.innerHTML = `
+              <div class="empty-state">
+                <div class="empty-state-icon"><i class="fas fa-user-lock"></i></div>
+                <h3>Access Denied</h3>
+                <p>Please log in to view your order history.</p>
+                <a href="/auth.html" class="nav-btn nav-btn-solid mt-2"><i class="fas fa-sign-in-alt"></i> Login Now</a>
+              </div>
+            `;
+            return;
+          }
+
+          if (!res.ok) {
+            throw new Error(data.error || 'Failed to retrieve orders.');
+          }
+
+          renderOrders(data.orders);
+        } catch (err) {
+          console.error(err);
+          ordersListView.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon"><i class="fas fa-exclamation-triangle" style="color: var(--error);"></i></div>
+              <h3>Unable to load orders</h3>
+              <p>${err.message}</p>
+            </div>
+          `;
+        }
+      }
+
+      function renderOrders(orders) {
+        if (!orders || orders.length === 0) {
+          ordersListView.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon"><i class="fas fa-receipt"></i></div>
+              <h3>No Orders Found</h3>
+              <p>You haven't placed any orders yet.</p>
+              <a href="/index.html" class="nav-btn nav-btn-solid mt-2"><i class="fas fa-arrow-left"></i> Start Shopping</a>
+            </div>
+          `;
+          return;
+        }
+
+        ordersListView.innerHTML = orders.map(order => {
+          const formattedDate = new Date(order.created_at).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+
+          const statusClass = order.status.toLowerCase() === 'processing' ? 'status-processing' : 'status-completed';
+
+          return `
+            <div class="order-card">
+              <div class="order-header">
+                <div class="order-meta-item">
+                  <span class="order-meta-label">Order Placed</span>
+                  <span class="order-meta-val">${formattedDate}</span>
+                </div>
+                <div class="order-meta-item">
+                  <span class="order-meta-label">Total Amount</span>
+                  <span class="order-meta-val">$${order.total_amount.toFixed(2)}</span>
+                </div>
+                <div class="order-meta-item">
+                  <span class="order-meta-label">Order ID</span>
+                  <span class="order-meta-val">#${order.id}</span>
+                </div>
+                <span class="order-status-badge ${statusClass}">${order.status}</span>
+              </div>
+              <div class="order-items-list">
+                ${order.items.map(item => `
+                  <div class="order-item-row">
+                    <img src="${item.image_url}" alt="${item.name}" class="order-item-img">
+                    <div class="order-item-info">
+                      <h4 class="order-item-name">${item.name}</h4>
+                      <span class="order-item-qty">Quantity: ${item.quantity} @ $${item.price.toFixed(2)}</span>
+                    </div>
+                    <span class="order-item-subtotal">$${(item.price * item.quantity).toFixed(2)}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      fetchOrders();
+    });
+  </script>
+</body>
+</html>
