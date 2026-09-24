@@ -445,8 +445,18 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     const taxFee = orderTotal * 0.08;
     const finalTotal = orderTotal + shippingFee + taxFee;
 
+    // Convert user_id safely
+    let userIdObj = req.user.id;
+    if (mongoose.Types.ObjectId.isValid(req.user.id)) {
+      userIdObj = new mongoose.Types.ObjectId(req.user.id);
+    } else {
+      // Find user by email or username if id is numeric/old JWT payload
+      const u = await User.findOne({ $or: [{ email: req.user.email }, { username: req.user.username }] });
+      if (u) userIdObj = u._id;
+    }
+
     const newOrder = await Order.create({
-      user_id: req.user.id,
+      user_id: userIdObj,
       total_amount: finalTotal,
       status: 'Active',
       shipping_name: shipping.name,
@@ -476,7 +486,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
 
   } catch (err) {
     console.error('Order checkout error:', err);
-    res.status(500).json({ error: 'An error occurred while processing your order.' });
+    res.status(500).json({ error: err.message || 'An error occurred while processing your order.' });
   }
 });
 
