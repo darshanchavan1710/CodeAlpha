@@ -149,7 +149,7 @@ async function initializeDatabase() {
           name: 'UltraSonic Mechanical Keyboard',
           description: 'Customizable RGB hot-swappable tactile mechanical keyboard with wireless dual-mode Bluetooth and 2.4GHz connection.',
           price: 119.99,
-          image_url: '/images/headphones.jpg',
+          image_url: '/images/keyboard.jpg',
           category: 'Electronics',
           stock: 35
         },
@@ -157,7 +157,7 @@ async function initializeDatabase() {
           name: 'Zenith OLED Gaming Monitor 27"',
           description: '27-inch 240Hz 0.03ms QHD gaming monitor with ultra-vivid color precision and HDR True Black 400 certification.',
           price: 649.99,
-          image_url: '/images/chair.jpg',
+          image_url: '/images/monitor.jpg',
           category: 'Electronics',
           stock: 12
         },
@@ -189,7 +189,7 @@ async function initializeDatabase() {
           name: 'Minimalist Walnut Desk Organizer',
           description: 'Handcrafted solid American walnut desk organizer with integrated wireless phone charging pad and pen tray.',
           price: 79.99,
-          image_url: '/images/lamp.jpg',
+          image_url: '/images/organizer.jpg',
           category: 'Office',
           stock: 30
         },
@@ -197,7 +197,7 @@ async function initializeDatabase() {
           name: 'SonicClean Electric Toothbrush',
           description: 'Sonic whitening toothbrush with 5 cleaning modes, smart quadrant timer, and travel case with UV sanitizer.',
           price: 69.99,
-          image_url: '/images/watch.jpg',
+          image_url: '/images/toothbrush.jpg',
           category: 'Lifestyle',
           stock: 45
         },
@@ -205,7 +205,7 @@ async function initializeDatabase() {
           name: 'Vortex Portable Bluetooth Speaker',
           description: 'IPX7 waterproof 360-degree outdoor speaker with deep bass, RGB lightshow beats, and 24-hour continuous playback.',
           price: 79.99,
-          image_url: '/images/headphones.jpg',
+          image_url: '/images/speaker.jpg',
           category: 'Electronics',
           stock: 65
         },
@@ -213,7 +213,7 @@ async function initializeDatabase() {
           name: 'AirPure HEPA Smart Air Purifier',
           description: 'Ultra-quiet air purifier with 3-stage True HEPA filter, real-time air quality display sensor, and mobile app control.',
           price: 159.99,
-          image_url: '/images/lamp.jpg',
+          image_url: '/images/purifier.jpg',
           category: 'Decor',
           stock: 22
         }
