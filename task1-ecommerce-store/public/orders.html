@@ -30,7 +30,18 @@
 
   <!-- Orders Display Container -->
   <main class="container orders-container">
-    <h2 class="panel-title" style="font-size: 28px; margin-bottom: 30px;">Your Orders</h2>
+    <h2 class="panel-title" style="font-size: 28px; margin-bottom: 20px;">Your Orders</h2>
+    
+    <!-- Order Tabs -->
+    <div class="orders-tabs" id="orders-tabs" style="display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); pb-2;">
+      <button class="order-tab-btn active" data-tab="active" style="background: none; border: none; color: var(--text-primary); font-size: 16px; font-weight: 600; padding: 10px 16px; cursor: pointer; border-bottom: 2px solid var(--primary);">
+        <i class="fas fa-box-open"></i> Current Orders <span id="active-count-badge" class="badge" style="background: var(--primary); padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 4px;">0</span>
+      </button>
+      <button class="order-tab-btn" data-tab="previous" style="background: none; border: none; color: var(--text-secondary); font-size: 16px; font-weight: 600; padding: 10px 16px; cursor: pointer;">
+        <i class="fas fa-history"></i> Previous Orders <span id="prev-count-badge" class="badge" style="background: var(--bg-tertiary); padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 4px;">0</span>
+      </button>
+    </div>
+
     <div id="orders-list-view">
       <div class="text-center" style="padding: 100px 0;">
         <i class="fas fa-circle-notch fa-spin" style="font-size: 40px; color: var(--primary);"></i>
@@ -51,6 +62,12 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const ordersListView = document.getElementById('orders-list-view');
+      const ordersTabs = document.getElementById('orders-tabs');
+      const activeCountBadge = document.getElementById('active-count-badge');
+      const prevCountBadge = document.getElementById('prev-count-badge');
+
+      let allOrders = [];
+      let currentTab = 'active'; // 'active' or 'previous'
 
       async function fetchOrders() {
         try {
@@ -58,7 +75,6 @@
           const data = await res.json();
 
           if (res.status === 401) {
-            // Unauthorized
             ordersListView.innerHTML = `
               <div class="empty-state">
                 <div class="empty-state-icon"><i class="fas fa-user-lock"></i></div>
@@ -74,7 +90,9 @@
             throw new Error(data.error || 'Failed to retrieve orders.');
           }
 
-          renderOrders(data.orders);
+          allOrders = data.orders || [];
+          updateTabCounts();
+          renderCurrentTab();
         } catch (err) {
           console.error(err);
           ordersListView.innerHTML = `
@@ -87,20 +105,33 @@
         }
       }
 
-      function renderOrders(orders) {
-        if (!orders || orders.length === 0) {
+      function updateTabCounts() {
+        const activeOrders = allOrders.filter(o => o.status.toLowerCase() === 'active' || o.status.toLowerCase() === 'processing');
+        const prevOrders = allOrders.filter(o => o.status.toLowerCase() !== 'active' && o.status.toLowerCase() !== 'processing');
+
+        activeCountBadge.textContent = activeOrders.length;
+        prevCountBadge.textContent = prevOrders.length;
+      }
+
+      function renderCurrentTab() {
+        const filtered = allOrders.filter(order => {
+          const isCurrent = order.status.toLowerCase() === 'active' || order.status.toLowerCase() === 'processing';
+          return currentTab === 'active' ? isCurrent : !isCurrent;
+        });
+
+        if (filtered.length === 0) {
           ordersListView.innerHTML = `
             <div class="empty-state">
-              <div class="empty-state-icon"><i class="fas fa-receipt"></i></div>
-              <h3>No Orders Found</h3>
-              <p>You haven't placed any orders yet.</p>
+              <div class="empty-state-icon"><i class="fas ${currentTab === 'active' ? 'fa-box-open' : 'fa-history'}"></i></div>
+              <h3>No ${currentTab === 'active' ? 'Current' : 'Previous'} Orders Found</h3>
+              <p>${currentTab === 'active' ? 'You have no active orders in progress.' : 'Your previous completed order history is empty.'}</p>
               <a href="/index.html" class="nav-btn nav-btn-solid mt-2"><i class="fas fa-arrow-left"></i> Start Shopping</a>
             </div>
           `;
           return;
         }
 
-        ordersListView.innerHTML = orders.map(order => {
+        ordersListView.innerHTML = filtered.map(order => {
           const formattedDate = new Date(order.created_at).toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -109,7 +140,8 @@
             minute: '2-digit'
           });
 
-          const statusClass = order.status.toLowerCase() === 'processing' ? 'status-processing' : 'status-completed';
+          const isProcessing = order.status.toLowerCase() === 'active' || order.status.toLowerCase() === 'processing';
+          const statusClass = isProcessing ? 'status-processing' : 'status-completed';
 
           return `
             <div class="order-card">
@@ -126,8 +158,17 @@
                   <span class="order-meta-label">Order ID</span>
                   <span class="order-meta-val">#${order.id}</span>
                 </div>
-                <span class="order-status-badge ${statusClass}">${order.status}</span>
+                <span class="order-status-badge ${statusClass}">${isProcessing ? 'Current Order (' + order.status + ')' : order.status}</span>
               </div>
+
+              <!-- Shipping & Payment Summary -->
+              ${order.shipping_address ? `
+                <div style="background: rgba(255,255,255,0.02); padding: 12px 20px; border-bottom: 1px solid var(--border-color); font-size: 13px; display: flex; flex-wrap: wrap; gap: 20px; color: var(--text-secondary);">
+                  <div><i class="fas fa-map-marker-alt" style="color: var(--primary);"></i> <strong>Deliver to:</strong> ${order.shipping_name}, ${order.shipping_address}, ${order.shipping_city} (${order.shipping_zip})</div>
+                  <div><i class="fas fa-credit-card" style="color: var(--success);"></i> <strong>Payment:</strong> ${order.payment_method || 'Card'}</div>
+                </div>
+              ` : ''}
+
               <div class="order-items-list">
                 ${order.items.map(item => `
                   <div class="order-item-row">
@@ -144,6 +185,25 @@
           `;
         }).join('');
       }
+
+      // Tab switcher
+      ordersTabs.addEventListener('click', (e) => {
+        const btn = e.target.closest('.order-tab-btn');
+        if (!btn) return;
+
+        document.querySelectorAll('.order-tab-btn').forEach(b => {
+          b.classList.remove('active');
+          b.style.color = 'var(--text-secondary)';
+          b.style.borderBottom = 'none';
+        });
+
+        btn.classList.add('active');
+        btn.style.color = 'var(--text-primary)';
+        btn.style.borderBottom = '2px solid var(--primary)';
+
+        currentTab = btn.dataset.tab;
+        renderCurrentTab();
+      });
 
       fetchOrders();
     });

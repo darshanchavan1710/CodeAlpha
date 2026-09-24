@@ -74,17 +74,33 @@ async function initializeDatabase() {
       )
     `);
 
-    // Create Orders table
+    // Create Orders table with Address & Payment details
     await dbRun(`
       CREATE TABLE IF NOT EXISTS orders (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER NOT NULL,
         total_amount REAL NOT NULL,
-        status TEXT DEFAULT 'Pending',
+        status TEXT DEFAULT 'Processing',
+        shipping_name TEXT,
+        shipping_address TEXT,
+        shipping_city TEXT,
+        shipping_zip TEXT,
+        payment_method TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users (id)
       )
     `);
+
+    // Add missing columns if table already exists
+    try {
+      await dbRun(`ALTER TABLE orders ADD COLUMN shipping_name TEXT`);
+      await dbRun(`ALTER TABLE orders ADD COLUMN shipping_address TEXT`);
+      await dbRun(`ALTER TABLE orders ADD COLUMN shipping_city TEXT`);
+      await dbRun(`ALTER TABLE orders ADD COLUMN shipping_zip TEXT`);
+      await dbRun(`ALTER TABLE orders ADD COLUMN payment_method TEXT`);
+    } catch (e) {
+      // Columns already exist
+    }
 
     // Create Order Items table
     await dbRun(`
@@ -99,14 +115,17 @@ async function initializeDatabase() {
       )
     `);
 
-    // Seed mock products if none exist
+    // Seed mock products (15 items across categories)
     const productCount = await dbGet('SELECT COUNT(*) as count FROM products');
-    if (productCount.count === 0) {
-      console.log('Seeding database with mock products...');
+    if (productCount.count < 15) {
+      // Clear existing to re-seed cleanly
+      await dbRun('DELETE FROM products');
+      
+      console.log('Seeding database with 15 mock products...');
       const seedProducts = [
         {
           name: 'AeroSound Max Pro Headphones',
-          description: 'Premium wireless over-ear headphones with active noise cancellation, dynamic bass, and 40 hours of battery life.',
+          description: 'Premium wireless over-ear headphones with active noise cancellation, dynamic spatial audio, and 40 hours of battery life.',
           price: 199.99,
           image_url: '/images/headphones.jpg',
           category: 'Electronics',
@@ -114,7 +133,7 @@ async function initializeDatabase() {
         },
         {
           name: 'ErgoLift Ergonomic Office Chair',
-          description: 'Fully adjustable ergonomic desk chair featuring high-density foam, lumbar support, breathable mesh, and smooth-rolling casters.',
+          description: 'Fully adjustable ergonomic desk chair featuring high-density memory foam, lumbar support, breathable mesh, and smooth casters.',
           price: 289.99,
           image_url: '/images/chair.jpg',
           category: 'Office',
@@ -122,7 +141,7 @@ async function initializeDatabase() {
         },
         {
           name: 'Nomad Traveler Backpack',
-          description: 'Durable, water-resistant travel backpack with a dedicated 16-inch laptop compartment, hidden pockets, and USB charging port.',
+          description: 'Durable, water-resistant travel backpack with dedicated 16-inch laptop compartment, hidden security pockets, and USB charging.',
           price: 89.99,
           image_url: '/images/backpack.jpg',
           category: 'Lifestyle',
@@ -130,7 +149,7 @@ async function initializeDatabase() {
         },
         {
           name: 'PulseFit Smart Fitness Watch',
-          description: 'Waterproof fitness tracker with continuous heart rate monitoring, built-in GPS, sleep tracking, and a bright AMOLED display.',
+          description: 'Waterproof fitness tracker with continuous heart rate monitoring, built-in GPS, sleep tracking, and vibrant AMOLED display.',
           price: 149.99,
           image_url: '/images/watch.jpg',
           category: 'Fitness',
@@ -138,7 +157,7 @@ async function initializeDatabase() {
         },
         {
           name: 'AromaBrew Precision Coffee Maker',
-          description: 'Drip coffee brewer with programmable timer, temperature controls, and a vacuum-insulated thermal carafe.',
+          description: 'Drip coffee brewer with programmable timer, exact temperature controls, and a vacuum-insulated thermal carafe.',
           price: 129.99,
           image_url: '/images/coffee.jpg',
           category: 'Kitchen',
@@ -146,11 +165,83 @@ async function initializeDatabase() {
         },
         {
           name: 'Lumina Glow Ambient Smart Lamp',
-          description: 'Smart LED bedside lamp with 16 million customizable colors, voice control compatibility, and customizable sleep timers.',
+          description: 'Smart LED bedside lamp with 16 million customizable color spectra, voice control compatibility, and sleep sync timers.',
           price: 59.99,
           image_url: '/images/lamp.jpg',
           category: 'Decor',
           stock: 60
+        },
+        {
+          name: 'UltraSonic Mechanical Keyboard',
+          description: 'Customizable RGB hot-swappable tactile mechanical keyboard with wireless dual-mode Bluetooth and 2.4GHz connection.',
+          price: 119.99,
+          image_url: '/images/headphones.jpg',
+          category: 'Electronics',
+          stock: 35
+        },
+        {
+          name: 'Zenith OLED Gaming Monitor 27"',
+          description: '27-inch 240Hz 0.03ms QHD gaming monitor with ultra-vivid color precision and HDR True Black 400 certification.',
+          price: 649.99,
+          image_url: '/images/chair.jpg',
+          category: 'Electronics',
+          stock: 12
+        },
+        {
+          name: 'HydroPure Smart Water Bottle',
+          description: 'Self-cleaning UV-C stainless steel insulated water bottle keeping liquids cold for 24 hours with hydration reminders.',
+          price: 49.99,
+          image_url: '/images/backpack.jpg',
+          category: 'Lifestyle',
+          stock: 90
+        },
+        {
+          name: 'HyperFlex Yoga & Fitness Mat',
+          description: 'Non-slip eco-friendly alignment laser-etched yoga mat with extra cushioning for maximum comfort during intense workouts.',
+          price: 39.99,
+          image_url: '/images/watch.jpg',
+          category: 'Fitness',
+          stock: 50
+        },
+        {
+          name: 'ChefPro Sous Vide Precision Cooker',
+          description: 'WiFi-enabled sous vide immersion circulator delivering restaurant-quality precision temperature cooking at home.',
+          price: 109.99,
+          image_url: '/images/coffee.jpg',
+          category: 'Kitchen',
+          stock: 25
+        },
+        {
+          name: 'Minimalist Walnut Desk Organizer',
+          description: 'Handcrafted solid American walnut desk organizer with integrated wireless phone charging pad and pen tray.',
+          price: 79.99,
+          image_url: '/images/lamp.jpg',
+          category: 'Office',
+          stock: 30
+        },
+        {
+          name: 'SonicClean Electric Toothbrush',
+          description: 'Sonic whitening toothbrush with 5 cleaning modes, smart quadrant timer, and travel case with UV sanitizer.',
+          price: 69.99,
+          image_url: '/images/watch.jpg',
+          category: 'Lifestyle',
+          stock: 45
+        },
+        {
+          name: 'Vortex Portable Bluetooth Speaker',
+          description: 'IPX7 waterproof 360-degree outdoor speaker with deep bass, RGB lightshow beats, and 24-hour continuous playback.',
+          price: 79.99,
+          image_url: '/images/headphones.jpg',
+          category: 'Electronics',
+          stock: 65
+        },
+        {
+          name: 'AirPure HEPA Smart Air Purifier',
+          description: 'Ultra-quiet air purifier with 3-stage True HEPA filter, real-time air quality display sensor, and mobile app control.',
+          price: 159.99,
+          image_url: '/images/lamp.jpg',
+          category: 'Decor',
+          stock: 22
         }
       ];
 
@@ -160,7 +251,7 @@ async function initializeDatabase() {
           [prod.name, prod.description, prod.price, prod.image_url, prod.category, prod.stock]
         );
       }
-      console.log('Seeding completed successfully.');
+      console.log('Seeding 15 products completed successfully.');
     }
   } catch (err) {
     console.error('Error initializing database:', err);
@@ -296,9 +387,9 @@ app.get('/api/auth/me', checkToken, (req, res) => {
 
 // 2. PRODUCTS
 
-// Get All Products
+// Get All Products (with Search, Category filter, and Price/Name Sorting)
 app.get('/api/products', async (req, res) => {
-  const { search, category } = req.query;
+  const { search, category, sort } = req.query;
   let query = 'SELECT * FROM products';
   const params = [];
 
@@ -314,6 +405,16 @@ app.get('/api/products', async (req, res) => {
 
   if (conditions.length > 0) {
     query += ' WHERE ' + conditions.join(' AND ');
+  }
+
+  if (sort === 'price-asc') {
+    query += ' ORDER BY price ASC';
+  } else if (sort === 'price-desc') {
+    query += ' ORDER BY price DESC';
+  } else if (sort === 'name-asc') {
+    query += ' ORDER BY name ASC';
+  } else {
+    query += ' ORDER BY id ASC';
   }
 
   try {
@@ -342,12 +443,20 @@ app.get('/api/products/:id', async (req, res) => {
 
 // 3. ORDERS & CHECKOUT
 
-// Place Order
+// Place Order with Multi-step Checkout details (Shipping Address & Payment)
 app.post('/api/orders', authenticateToken, async (req, res) => {
-  const { items } = req.body; // Array of { id, quantity }
+  const { items, shipping, payment } = req.body; // Array of { id, quantity }, shipping object, payment object
 
   if (!items || !Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'Your cart is empty.' });
+  }
+
+  if (!shipping || !shipping.name || !shipping.address || !shipping.city || !shipping.zip) {
+    return res.status(400).json({ error: 'Complete shipping address is required.' });
+  }
+
+  if (!payment || !payment.method) {
+    return res.status(400).json({ error: 'Payment method details are required.' });
   }
 
   try {
@@ -377,10 +486,25 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
       });
     }
 
-    // 2. Insert order
+    // Add shipping & tax to orderTotal
+    const shippingFee = orderTotal > 150 ? 0 : 15;
+    const taxFee = orderTotal * 0.08;
+    const finalTotal = orderTotal + shippingFee + taxFee;
+
+    // 2. Insert order with shipping & payment info
     const orderResult = await dbRun(
-      'INSERT INTO orders (user_id, total_amount, status) VALUES (?, ?, ?)',
-      [req.user.id, orderTotal, 'Processing']
+      `INSERT INTO orders (user_id, total_amount, status, shipping_name, shipping_address, shipping_city, shipping_zip, payment_method) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        req.user.id,
+        finalTotal,
+        'Active', // 'Active' (Current) vs 'Delivered' (Previous)
+        shipping.name,
+        shipping.address,
+        shipping.city,
+        shipping.zip,
+        payment.method === 'card' ? `Credit Card (*${(payment.cardNumber || '4242').slice(-4)})` : payment.method === 'upi' ? `UPI (${payment.upiId || 'user@upi'})` : 'Cash on Delivery'
+      ]
     );
     const orderId = orderResult.lastID;
 
@@ -402,7 +526,7 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     res.status(201).json({
       message: 'Order placed successfully!',
       orderId,
-      total: orderTotal
+      total: finalTotal
     });
 
   } catch (err) {
@@ -411,11 +535,12 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
   }
 });
 
-// Retrieve Order History for Logged-in User
+// Retrieve Order History for Logged-in User (Divided into Current vs Previous)
 app.get('/api/orders', authenticateToken, async (req, res) => {
   try {
     const orders = await dbAll(
-      'SELECT id, total_amount, status, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+      `SELECT id, total_amount, status, shipping_name, shipping_address, shipping_city, shipping_zip, payment_method, created_at 
+       FROM orders WHERE user_id = ? ORDER BY created_at DESC`,
       [req.user.id]
     );
 

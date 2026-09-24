@@ -43,7 +43,18 @@
       <!-- Search Input -->
       <div class="search-box">
         <i class="fas fa-search"></i>
-        <input type="text" id="catalog-search" placeholder="Search catalog...">
+        <input type="text" id="catalog-search" placeholder="Search 15+ products...">
+      </div>
+
+      <!-- Sorting Selector -->
+      <div class="sort-box">
+        <label for="catalog-sort"><i class="fas fa-sort-amount-down"></i> Sort By:</label>
+        <select id="catalog-sort" class="form-control" style="width: auto; padding: 8px 12px; height: auto;">
+          <option value="default">Featured / Default</option>
+          <option value="price-asc">Price: Low to High</option>
+          <option value="price-desc">Price: High to Low</option>
+          <option value="name-asc">Name: A - Z</option>
+        </select>
       </div>
 
       <!-- Categories Filter Tabs -->
@@ -85,9 +96,11 @@
       const productsGrid = document.getElementById('catalog-products');
       const searchInput = document.getElementById('catalog-search');
       const categoryFilters = document.getElementById('category-filters');
+      const sortSelect = document.getElementById('catalog-sort');
       
       let currentCategory = 'All';
       let currentSearch = '';
+      let currentSort = 'default';
       
       // Fetch and display products
       async function loadProducts() {
@@ -99,7 +112,7 @@
             </div>
           `;
           
-          let url = `/api/products?category=${encodeURIComponent(currentCategory)}&search=${encodeURIComponent(currentSearch)}`;
+          let url = `/api/products?category=${encodeURIComponent(currentCategory)}&search=${encodeURIComponent(currentSearch)}&sort=${encodeURIComponent(currentSort)}`;
           const res = await fetch(url);
           const data = await res.json();
           
@@ -175,6 +188,14 @@
         currentCategory = e.target.dataset.category;
         loadProducts();
       });
+
+      // Handle sort change
+      if (sortSelect) {
+        sortSelect.addEventListener('change', (e) => {
+          currentSort = e.target.value;
+          loadProducts();
+        });
+      }
 
       // Handle search keyups (debounced slightly)
       let searchTimeout;
