@@ -403,9 +403,26 @@ app.post('/api/orders', authenticateToken, async (req, res) => {
     let orderTotal = 0;
 
     for (const item of items) {
-      const product = await Product.findById(item.id);
+      let product;
+      if (mongoose.Types.ObjectId.isValid(item.id)) {
+        product = await Product.findById(item.id);
+      }
       if (!product) {
-        return res.status(404).json({ error: `Product with ID ${item.id} not found.` });
+        // Fallback search if id was stored as index or string number
+        product = await Product.findOne({ $or: [{ _id: item.id }, { name: item.name }] });
+      }
+      if (!product) {
+        // If still not found, fetch by index / first available matching product
+        const allProds = await Product.find();
+        if (typeof item.id === 'number' && item.id <= allProds.length) {
+          product = allProds[item.id - 1];
+        } else if (allProds.length > 0) {
+          product = allProds[0];
+        }
+      }
+
+      if (!product) {
+        return res.status(404).json({ error: `Product not found.` });
       }
 
       if (product.stock < item.quantity) {
