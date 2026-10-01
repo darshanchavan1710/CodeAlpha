@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feed | ApexSocial</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="container navbar">
+      <a href="/index.html" class="logo"><i class="fas fa-share-nodes"></i> ApexSocial</a>
+      <nav class="nav-links">
+        <a href="/index.html" class="nav-link active">Feed</a>
+      </nav>
+      <div class="nav-actions" id="auth-nav">
+        <!-- Populated dynamically by app.js -->
+      </div>
+    </div>
+  </header>
+
+  <!-- Feed Dashboard -->
+  <main class="container dashboard-grid">
+    <!-- Left Column: Feed content -->
+    <section>
+      <!-- Post Creator Card -->
+      <div id="creator-box" class="post-creator-card hidden">
+        <form id="post-create-form">
+          <div class="creator-header">
+            <img id="creator-user-avatar" src="/images/avatar_default.jpg" alt="Avatar" class="creator-avatar">
+            <div class="creator-input-wrapper">
+              <textarea id="post-content-input" class="creator-textarea" placeholder="What's on your mind? Share your thoughts..."></textarea>
+            </div>
+          </div>
+          <div class="post-options-row">
+            <!-- Simulated image attachment drop-down -->
+            <div class="media-input-box">
+              <label for="post-media-select" class="media-select-label"><i class="far fa-image"></i> Attach Image:</label>
+              <select id="post-media-select" class="media-select-dropdown">
+                <option value="">No Image</option>
+                <option value="/images/post_code.jpg">Tech / Code Workspace</option>
+                <option value="/images/post_design.jpg">Glassmorphism Design Mockup</option>
+                <option value="/images/post_run.jpg">Fitness Marathon Run</option>
+              </select>
+            </div>
+            <button type="submit" class="submit-post-btn">Post Update</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Feed Filters -->
+      <div class="feed-filter-bar">
+        <button class="filter-tab active" id="filter-all">Explore Feed</button>
+        <button class="filter-tab" id="filter-following">Following Feed</button>
+      </div>
+
+      <!-- Posts List Stream -->
+      <div id="feed-stream" class="posts-stream">
+        <div class="text-center" style="padding: 40px 0;">
+          <i class="fas fa-circle-notch fa-spin" style="font-size: 32px; color: var(--primary);"></i>
+          <p style="margin-top: 10px; color: var(--text-secondary);">Loading feed posts...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Sidebar follow recommendations -->
+    <aside>
+      <div class="sidebar-panel">
+        <h3 class="sidebar-title">Who to Follow</h3>
+        <div id="recommendations-box">
+          <!-- Filled dynamically by feed.js -->
+          <div class="text-center" style="padding: 20px 0;">
+            <i class="fas fa-circle-notch fa-spin" style="font-size: 20px; color: var(--primary);"></i>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container footer-layout">
+      <p>&copy; 2026 ApexSocial. All rights reserved.</p>
+      <p>Premium dark-mode social network.</p>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+  <script src="/js/feed.js"></script>
+</body>
+</html>
