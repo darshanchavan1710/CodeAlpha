@@ -165,7 +165,7 @@ async function initializeDatabase() {
           name: 'HydroPure Smart Water Bottle',
           description: 'Self-cleaning UV-C stainless steel insulated water bottle keeping liquids cold for 24 hours with hydration reminders.',
           price: 49.99,
-          image_url: '/images/backpack.jpg',
+          image_url: '/images/Hydropure smart Water bottle.jpg',
           category: 'Lifestyle',
           stock: 90
         },
@@ -173,7 +173,7 @@ async function initializeDatabase() {
           name: 'HyperFlex Yoga & Fitness Mat',
           description: 'Non-slip eco-friendly alignment laser-etched yoga mat with extra cushioning for maximum comfort during intense workouts.',
           price: 39.99,
-          image_url: '/images/watch.jpg',
+          image_url: '/images/yogamat.jpg',
           category: 'Fitness',
           stock: 50
         },
@@ -181,7 +181,7 @@ async function initializeDatabase() {
           name: 'ChefPro Sous Vide Precision Cooker',
           description: 'WiFi-enabled sous vide immersion circulator delivering restaurant-quality precision temperature cooking at home.',
           price: 109.99,
-          image_url: '/images/coffee.jpg',
+          image_url: '/images/chefpro sous vide precision cooker.jpg',
           category: 'Kitchen',
           stock: 25
         },
